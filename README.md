@@ -14,5 +14,5 @@ cd msan-repro
 CC=clang go test -msan . --exec 'stress -p 40' -v
 ```
 
-If it doesn't repro, interrupt and run again.
+If it doesn't repro in a few seconds, interrupt and run again.
 
