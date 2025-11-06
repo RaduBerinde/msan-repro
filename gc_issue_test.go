@@ -38,7 +38,7 @@ func runOne(t *testing.T) {
 		go func(enqueue bool) {
 			defer wg.Done()
 			if enqueue {
-				time.Sleep(time.Duration(rng.Intn(10_000)))
+				time.Sleep(time.Duration(rng.Intn(10000)))
 				dp.Enqueue(1, ObsoleteFile{
 					FileType: FileTypeTable,
 					Path:     fmt.Sprintf("this is some string %d", rng.Intn(1000)),
