@@ -6,7 +6,7 @@ package deletepacer
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"math/rand"
 	"sync"
 	"testing"
@@ -48,7 +48,7 @@ func runOne(t *testing.T) {
 			}
 			a := make([]byte, 100)
 			for k := 0; k < 100; k++ {
-				fmt.Fprintf(io.Discard, "%v\n", a)
+				fmt.Fprintf(ioutil.Discard, "%v\n", a)
 			}
 		}(j == n-1)
 	}

@@ -11,7 +11,6 @@ import (
 	"reflect"
 	"runtime"
 	"runtime/trace"
-	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -189,7 +188,7 @@ func (dp *DeletePacer) mainLoop() {
 			//	runtime.Gosched()
 			//	if invariants.TestString(file.Path) >= 0 {
 			//		fmt.Printf("BEFORE POP POISON! (iteration %d) [%p, %d)\n", i, stringData(file.Path), len(file.Path))
-			//		fmt.Printf("path clone: %s\n", strings.Clone(file.Path))
+			//		fmt.Printf("path clone: %s\n", stringClone(file.Path))
 			//
 			//		//fmt.Printf("\n\n***************** STACK BEFORE *****************\n\n")
 			//		//fmt.Printf("%s", stack1)
@@ -202,7 +201,7 @@ func (dp *DeletePacer) mainLoop() {
 			//fmt.Printf("1: %s\n", file.Path)
 			dp.mu.queue.PopFront()
 			fmt.Printf("\n\npopped\n")
-			//v := strings.Clone(file.Path)
+			//v := stringClone(file.Path)
 			//for i := 0; i < 10000; i++ {
 			//	runtime.GC()
 			//	if v != file.Path {
@@ -252,7 +251,7 @@ func (dp *DeletePacer) mainLoop() {
 					//fmt.Printf("%s", stack1)
 					//fmt.Printf("\n\n***************** STACK END *************\n\n")
 
-					fmt.Printf("path clone: %s\n\n\n", strings.Clone(file.Path))
+					fmt.Printf("path clone: %s\n\n\n", stringClone(file.Path))
 					fmt.Printf("path: %s\n", file.Path)
 				}
 			}
@@ -267,7 +266,7 @@ func (dp *DeletePacer) mainLoop() {
 						//os.WriteFile("/tmp/trace", traceBuf.Bytes(), 0666)
 
 						fmt.Printf("AFTER UNLOCK POISON! (iteration %d) [%p, %d)\n", i, stringData(file.Path), len(file.Path))
-						fmt.Printf("path clone: %s\n\n\n", strings.Clone(file.Path))
+						fmt.Printf("path clone: %s\n\n\n", stringClone(file.Path))
 
 						//fmt.Printf("\n\n***************** STACK BEFORE *****************\n\n")
 						//fmt.Printf("%s", stack1)
@@ -277,7 +276,7 @@ func (dp *DeletePacer) mainLoop() {
 					}
 				}
 				fmt.Printf("path %p %d\n", stringData(file.Path), len(file.Path))
-				fmt.Printf("path clone: %s\n\n\n", strings.Clone(file.Path))
+				fmt.Printf("path clone: %s\n\n\n", stringClone(file.Path))
 				fmt.Printf("path: %s\n", file.Path)
 				dp.deleteFn(file.ObsoleteFile, file.JobID)
 			}()
@@ -332,4 +331,8 @@ type Metrics struct {
 
 func stringData(s string) unsafe.Pointer {
 	return unsafe.Pointer((*reflect.StringHeader)(unsafe.Pointer(&s)).Data)
+}
+
+func stringClone(s string) string {
+	return string((*[10000]byte)(stringData(s))[:len(s)])
 }
