@@ -19,6 +19,6 @@ func TestString(s string) (firstPoison int) {
 	if len(s) == 0 {
 		return -1
 	}
-	p := unsafe.StringData(s)
+	p := stringData(s)
 	return int(C.msan_test(unsafe.Pointer(p), C.size_t(len(s))))
 }

@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"reflect"
 	"runtime"
 	"runtime/trace"
 	"strings"
@@ -187,7 +188,7 @@ func (dp *DeletePacer) mainLoop() {
 			//	//stack1 = stack1[:runtime.Stack(stack1[:cap(stack1)], true)]
 			//	runtime.Gosched()
 			//	if invariants.TestString(file.Path) >= 0 {
-			//		fmt.Printf("BEFORE POP POISON! (iteration %d) [%p, %d)\n", i, unsafe.StringData(file.Path), len(file.Path))
+			//		fmt.Printf("BEFORE POP POISON! (iteration %d) [%p, %d)\n", i, stringData(file.Path), len(file.Path))
 			//		fmt.Printf("path clone: %s\n", strings.Clone(file.Path))
 			//
 			//		//fmt.Printf("\n\n***************** STACK BEFORE *****************\n\n")
@@ -197,7 +198,7 @@ func (dp *DeletePacer) mainLoop() {
 			//		fmt.Printf("path: %s\n", file.Path)
 			//	}
 			//}
-			//fmt.Printf("peek %p\n", unsafe.StringData(file.Path))
+			//fmt.Printf("peek %p\n", stringData(file.Path))
 			//fmt.Printf("1: %s\n", file.Path)
 			dp.mu.queue.PopFront()
 			fmt.Printf("\n\npopped\n")
@@ -212,10 +213,10 @@ func (dp *DeletePacer) mainLoop() {
 			//runtime.GC()
 			fmt.Printf("\n\nGC after pop done\n")
 			//stack1 = stack1[:runtime.Stack(stack1[:cap(stack1)], true)]
-			//fmt.Printf("popped %p\n", unsafe.StringData(file.Path))
+			//fmt.Printf("popped %p\n", stringData(file.Path))
 			//fmt.Printf("2: %s\n", file.Path)
 			//fmt.Printf("3: %s\n", file.Path)
-			//fmt.Printf("before unlock: %p\n", unsafe.StringData(file.Path))
+			//fmt.Printf("before unlock: %p\n", stringData(file.Path))
 			//func() {
 			//	defer func() {
 			//		if r := recover(); r != nil {
@@ -230,14 +231,14 @@ func (dp *DeletePacer) mainLoop() {
 			//trace.Start(&traceBuf)
 			//defer trace.Stop()
 
-			//runtime.MSanRead(unsafe.Pointer(unsafe.StringData(file.Path)), len(file.Path))
+			//runtime.MSanRead(unsafe.Pointer(stringData(file.Path)), len(file.Path))
 			for i := 0; i < 10000; i++ {
 				//stack1 = stack1[:runtime.Stack(stack1[:cap(stack1)], true)]
 				runtime.Gosched()
 				if TestString(file.Path) >= 0 {
 					trace.Stop()
 
-					fmt.Printf("LOCKED POISON! (iteration %d) [%p, %d)\n", i, unsafe.StringData(file.Path), len(file.Path))
+					fmt.Printf("LOCKED POISON! (iteration %d) [%p, %d)\n", i, stringData(file.Path), len(file.Path))
 					//printTraceBuf()
 
 					fmt.Printf("string char by char:")
@@ -265,7 +266,7 @@ func (dp *DeletePacer) mainLoop() {
 						trace.Stop()
 						//os.WriteFile("/tmp/trace", traceBuf.Bytes(), 0666)
 
-						fmt.Printf("AFTER UNLOCK POISON! (iteration %d) [%p, %d)\n", i, unsafe.StringData(file.Path), len(file.Path))
+						fmt.Printf("AFTER UNLOCK POISON! (iteration %d) [%p, %d)\n", i, stringData(file.Path), len(file.Path))
 						fmt.Printf("path clone: %s\n\n\n", strings.Clone(file.Path))
 
 						//fmt.Printf("\n\n***************** STACK BEFORE *****************\n\n")
@@ -275,7 +276,7 @@ func (dp *DeletePacer) mainLoop() {
 						fmt.Printf("path: %s\n", file.Path)
 					}
 				}
-				fmt.Printf("path %p %d\n", unsafe.StringData(file.Path), len(file.Path))
+				fmt.Printf("path %p %d\n", stringData(file.Path), len(file.Path))
 				fmt.Printf("path clone: %s\n\n\n", strings.Clone(file.Path))
 				fmt.Printf("path: %s\n", file.Path)
 				dp.deleteFn(file.ObsoleteFile, file.JobID)
@@ -303,7 +304,7 @@ func (dp *DeletePacer) Enqueue(jobID int, files ...ObsoleteFile) {
 		//}()
 	}
 	for _, file := range files {
-		fmt.Printf("\nPushBack %p %s\n", unsafe.StringData(file.Path), file.Path)
+		fmt.Printf("\nPushBack %p %s\n", stringData(file.Path), file.Path)
 		dp.mu.queue.PushBack(queueEntry{
 			ObsoleteFile: file,
 			JobID:        jobID,
@@ -327,4 +328,8 @@ type Metrics struct {
 	// Deleted contains the count and total size of files that have been deleted
 	// since the DeletePacer was started, broken down by file type and locality.
 	Deleted FileCountsAndSizes
+}
+
+func stringData(s string) unsafe.Pointer {
+	return unsafe.Pointer((*reflect.StringHeader)(unsafe.Pointer(&s)).Data)
 }
