@@ -3,6 +3,7 @@
 // the LICENSE file.
 
 //go:build !msan
+// +build !msan
 
 package deletepacer
 
